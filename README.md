@@ -31,9 +31,8 @@ Have any questions, concerns, bug reports, or just want to chat? Join the discor
 3. You must run the discord bot, and the capture portion (See Easiest installation below) at the same time, and on the same PC (for now).
 
 # Installation Video (click the image):
-Made by Wolfhound905 for the pre-release! :)
 
-[![Installation](https://img.youtube.com/vi/gRxKRqefzp4/0.jpg)](https://youtu.be/gRxKRqefzp4)
+[![Installation](https://img.youtube.com/vi/LUptOv5ohNc/0.jpg)](https://youtu.be/LUptOv5ohNc)
 
 # Installation
 
@@ -74,6 +73,7 @@ Example:
 If you play in larger groups of 8+ people, this is recommended to not be rate-limited (delayed) by Discord when rounds change!
 
 ### Advanced. Only configure these variables if you know what you're doing
+- `EMOJI_GUILD_ID`: If your bot is a member of multiple guilds, this ID can be used to specify the single guild that it should use for emojis (no need to add the emojis to ALL servers).
 - `PORT`: The port the Bot will use for incoming Socket.io communications from the capture client. Defaults to 8123.
 You must specify more (comma-delimited ports) if you are running with `NUM_SHARDS` > 1. For example, with 3 shards, `PORT = 8123,8124,8125`
 - `SERVER_URL`: The externally-accessible URL for *this* instance of the discord bot. For example, `http://test.com`.
@@ -133,10 +133,10 @@ Their project works like a traditional Discord bot; very easy installation!
 
 # Troubleshooting
 
-- "Websocket 400-something: Authentication Failed" Error!
+- **"Websocket 400-something: Authentication Failed" Error!**
 Your `DISCORD_BOT_TOKEN` is incorrect or invalid. Make sure you copied/pasted the Bot *token*, NOT the "client secret" from the Discord Developer portal
 
-- "Emoji ID is not a snowflake" Error! Or the bot doesn't provide emojis as reactions on the status message!
+- **"Emoji ID is not a snowflake" Error! Or the bot doesn't provide emojis as reactions on the status message!**
 The discord API is agonizingly slow to upload new emojis, inform bots about the presence of new/updated emojis, and delete emojis.
 The easiest answer is to **give it a while** (sometimes can take almost 30 minutes), and try again.
 
