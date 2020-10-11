@@ -28,7 +28,8 @@ Have any questions, concerns, bug reports, or just want to chat? Join the discor
 
 1. This program must be run on a Windows PC. The program **CANNOT** be run directly on mobile phones.
 2. You need a minimum of 12 open emoji slots on your server. The bot uses player emojis to link discord users to in-game player colors; it will add them automatically, but you need at least 12 slots (25 recommended).
-3. You must run the discord bot, and the capture portion (See Easiest installation below) at the same time, and on the same PC (for now).
+3. You must run the discord bot, and the capture portion (See Easiest installation below) at the same time. Easiest installation covers running the bot
+portion locally, but feel free to use Heroku or Docker or the like to host the bot remotely.
 
 # Installation Video (click the image):
 
@@ -76,6 +77,7 @@ If you play in larger groups of 8+ people, this is recommended to not be rate-li
 - `EMOJI_GUILD_ID`: If your bot is a member of multiple guilds, this ID can be used to specify the single guild that it should use for emojis (no need to add the emojis to ALL servers).
 - `PORT`: The port the Bot will use for incoming Socket.io communications from the capture client. Defaults to 8123.
 You must specify more (comma-delimited ports) if you are running with `NUM_SHARDS` > 1. For example, with 3 shards, `PORT = 8123,8124,8125`
+- `EXT_PORT`: The port to use for the capture url. Must be a valid port number, or "protocol" to not include a port in the url. Defaults to PORT.
 - `SERVER_URL`: The externally-accessible URL for *this* instance of the discord bot. For example, `http://test.com`.
 This is used to provide the linking URI to the capture, via the Direct Message the bot sends you when typing `.au new` (in conjunction with the PORT above).
 **You must specify `http://` or `https://` accordingly as part of the URL**
@@ -122,14 +124,17 @@ The Discord Bot uses the `.au` prefix for any commands
 |`.au unlink`|`.au u`|@name|Manually unlink a player|`.au u @player`|
 |`.au settings`|`.au s`||View and change settings for the bot, such as the command prefix or mute behavior||
 |`.au force`|`.au f`|stage|Force a transition to a stage if you encounter a problem in the state|`.au f task` or `.au f d`(discuss)|
+|`.au pause`|`.au p`||Pause the bot, and don't let it automute anyone until unpaused. **will not un-mute muted players, be careful!**||
 
 # Similar Projects
 
-- [AmongUsBot](https://github.com/alpharaoh/AmongUsBot). Without their original Python program
+- [AmongUsBot](https://github.com/alpharaoh/AmongUsBot): Without their original Python program
 with a lot of the OCR/Discord functionality, I never would have even thought of this idea! Not currently maintained
 
-- [amongcord](https://github.com/pedrofracassi) great program for tracking player status and auto mute/unmute in Among Us.
+- [amongcord](https://github.com/pedrofracassi/amongcord): A great program for tracking player status and auto mute/unmute in Among Us.
 Their project works like a traditional Discord bot; very easy installation!
+
+- [Silence Among Us](https://github.com/tanndev/silence-among-us#silence-among-us): Another bot quite similar to this one, which also uses AmongUsCapture. Now in early-access with a publicly-hosted instance.
 
 # Troubleshooting
 

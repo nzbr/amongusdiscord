@@ -2,9 +2,11 @@ package discord
 
 import (
 	"fmt"
-	"github.com/denverquane/amongusdiscord/game"
 	"log"
+	"regexp"
 	"strings"
+
+	"github.com/denverquane/amongusdiscord/game"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -22,6 +24,8 @@ func (bot *Bot) handleGameEndMessage(guild *GuildState, s *discordgo.Session) {
 	//clear the tracking and make sure all users are unlinked
 	guild.clearGameTracking(s)
 
+	guild.GameRunning = false
+
 	// clear any existing game state message
 	guild.AmongUsData.SetRoomRegion("", "")
 }
@@ -33,23 +37,46 @@ func (bot *Bot) handleNewGameMessage(guild *GuildState, s *discordgo.Session, m 
 	//we don't have enough info to go off of when remaking the game...
 	//if !guild.GameStateMsg.Exists() {
 
+	//TODO don't always recreate if we're already connected...
+
 	connectCode := generateConnectCode(guild.PersistentGuildData.GuildID)
 	log.Println(connectCode)
 	bot.LinkCodeLock.Lock()
 	bot.LinkCodes[GameOrLobbyCode{
-		gameCode:    "",
+		gameCode:    room,
 		connectCode: connectCode,
 	}] = guild.PersistentGuildData.GuildID
-	guild.LinkCode = connectCode
+
 	bot.LinkCodeLock.Unlock()
 
 	var hyperlink string
-	if strings.HasPrefix(bot.url, "https://") {
-		hyperlink = fmt.Sprintf("aucapture://%s:%s/%s", strings.Replace(bot.url, "https://", "", 1), bot.socketPort, connectCode)
-	} else if strings.HasPrefix(bot.url, "http://") {
-		hyperlink = fmt.Sprintf("aucapture://%s:%s/%s?insecure", strings.Replace(bot.url, "http://", "", 1), bot.socketPort, connectCode)
+	urlregex := regexp.MustCompile(`^http(?P<secure>s?):\/\/(?P<host>[\w.-]+)(?::(?P<port>\d+))?$`)
+	if match := urlregex.FindStringSubmatch(bot.url); match != nil {
+		secure := match[urlregex.SubexpIndex("secure")] == "s"
+		host := match[urlregex.SubexpIndex("host")]
+		port := ":" + match[urlregex.SubexpIndex("port")]
+
+		if port == ":" {
+			if bot.extPort != "" {
+				if bot.extPort == "protocol" {
+					port = ""
+				} else {
+					port = ":" + bot.extPort
+				}
+			} else {
+				//if no port explicitly provided via config, use the default
+				port = ":" + bot.socketPort
+			}
+		}
+
+		insecure := "?insecure"
+		if secure {
+			insecure = ""
+		}
+
+		hyperlink = fmt.Sprintf("aucapture://%s%s/%s%s", host, port, connectCode, insecure)
 	} else {
-		hyperlink = "aucapture://INVALID_PROTOCOL_ON_SERVER_URL"
+		hyperlink = "aucapture://INVALID_SERVER_URL"
 	}
 
 	var embed = discordgo.MessageEmbed{
@@ -57,7 +84,7 @@ func (bot *Bot) handleNewGameMessage(guild *GuildState, s *discordgo.Session, m 
 		Type:  "",
 		Title: "You just started a game!",
 		Description: fmt.Sprintf("Click the following link to link your capture: \n <%s>\n\n"+
-			"Don't have the capture installed? [Download it here](%s)\nIf you don't have .NET Core installed, you can get that [here](%s)", hyperlink, downloadURL, dotNetUrl),
+			"Don't have the capture installed? [Download it here](%s)\nIf you don't have .NET Core installed, you can get that [here](%s)\n\nTo link your capture manually:", hyperlink, downloadURL, dotNetUrl),
 		Timestamp: "",
 		Color:     3066993, //GREEN
 		Image:     nil,
@@ -65,6 +92,18 @@ func (bot *Bot) handleNewGameMessage(guild *GuildState, s *discordgo.Session, m 
 		Video:     nil,
 		Provider:  nil,
 		Author:    nil,
+		Fields: []*discordgo.MessageEmbedField{
+			&discordgo.MessageEmbedField{
+				Name:   "URL",
+				Value:  bot.url,
+				Inline: true,
+			},
+			&discordgo.MessageEmbedField{
+				Name:   "Code",
+				Value:  connectCode,
+				Inline: true,
+			},
+		},
 	}
 
 	sendMessageDM(s, m.Author.ID, &embed)
@@ -113,6 +152,8 @@ func (guild *GuildState) handleGameStartMessage(s *discordgo.Session, m *discord
 	guild.AmongUsData.SetRoomRegion(room, region)
 
 	guild.clearGameTracking(s)
+
+	guild.GameRunning = true
 
 	for _, channel := range channels {
 		if channel.channelName != "" {

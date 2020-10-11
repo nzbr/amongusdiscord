@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+/amongusdiscord
 
 # Test binary, built with `go test -c`
 *.test
@@ -19,9 +20,11 @@
 
 .idea/
 
-# final config file
+# config files
+config.txt
 final.txt
 final.env
+config.txt
 
 # logs file
 logs.txt

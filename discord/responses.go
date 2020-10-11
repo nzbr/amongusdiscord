@@ -25,6 +25,7 @@ func helpResponse(version, CommandPrefix string) string {
 	buf.WriteString(fmt.Sprintf("`%s unlink` or `%s u`: Manually unlink a player. Ex: `%s u @player`\n", CommandPrefix, CommandPrefix, CommandPrefix))
 	buf.WriteString(fmt.Sprintf("`%s settings` or `%s s`: View and change settings for the bot, such as the command prefix or mute behavior\n", CommandPrefix, CommandPrefix))
 	buf.WriteString(fmt.Sprintf("`%s force` or `%s f`: Force a transition to a stage if you encounter a problem in the state. Ex: `%s f task` or `%s f d`(discuss)\n", CommandPrefix, CommandPrefix, CommandPrefix, CommandPrefix))
+	buf.WriteString(fmt.Sprintf("`%s pause` or `%s p`: Pause the bot, and don't let it automute anyone until unpaused. **will not un-mute muted players, be careful!**\n", CommandPrefix, CommandPrefix))
 
 	return buf.String()
 }
@@ -47,6 +48,7 @@ func (guild *GuildState) linkPlayerResponse(s *discordgo.Session, GuildID string
 	g, err := s.State.Guild(guild.PersistentGuildData.GuildID)
 	if err != nil {
 		log.Println(err)
+		return
 	}
 
 	userID := getMemberFromString(s, GuildID, args[0])
@@ -139,7 +141,7 @@ func menuMessage(g *GuildState) *discordgo.MessageEmbed {
 	}
 	color := 15158332 //red
 	desc := ""
-	if g.LinkCode == "" {
+	if g.Linked {
 		desc = g.makeDescription()
 		color = 3066993
 	} else {
@@ -182,7 +184,7 @@ func lobbyMessage(g *GuildState) *discordgo.MessageEmbed {
 	}
 	color := 15158332 //red
 	desc := ""
-	if g.LinkCode == "" {
+	if g.Linked {
 		desc = g.makeDescription()
 		color = 3066993
 	} else {
@@ -253,6 +255,10 @@ func gamePlayMessage(guild *GuildState) *discordgo.MessageEmbed {
 
 func (guild *GuildState) makeDescription() string {
 	buf := bytes.NewBuffer([]byte{})
+	if !guild.GameRunning {
+		buf.WriteString("\n**Bot is Paused! Unpause with `" + guild.PersistentGuildData.CommandPrefix + " p`!**\n\n")
+	}
+
 	author := guild.GameStateMsg.leaderID
 	if author != "" {
 		buf.WriteString("<@" + author + "> is running an Among Us game!\nThe game is happening in ")
